@@ -9,13 +9,33 @@ import SignInput from '../../components/SignInput'
 
 const Login = ({ navigation }) => {
 
+    const [token, setToken] = useState('');
+    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
+
     const [isEnabled, setIsEnabled] = useState(false);
     const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
     const fetchUserData = async () => {
-        const response = await axios
-            .get('https://jsonplaceholder.typicode.com/users')
-        console.log(response)
+        //console.log(email, password)
+        await axios({
+            method: 'post',
+            url: "http://10.0.2.2:3031/authenticate",
+            data: { email: email, password: password },
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then((response) => {
+            response.data.token ? (navigation.navigate('Home'), setToken(response.data.token), console.log(response.data.token))
+                : console.log('token yok')
+
+        }
+        ).catch((error) => {
+            console.log(error)
+        })
+
+
+
     }
 
     return (
@@ -30,12 +50,13 @@ const Login = ({ navigation }) => {
                 <SignInput
                     label="Email"
                     placeHolder="Email adresinizi giriniz ..."
-                    onChange={() => { }}
+                    onChangeText={(e) => { setEmail(e) }}
                 />
                 <SignInput label="Şifre"
                     placeHolder="Şifrenizi giriniz ..."
                     secureTextEntry={true}
-                    onChange={() => { }}
+                    onChangeText={(e) => { setPassword(e) }
+                    }
                 />
                 <View style={styles.switch_conteiner}>
                     <Text style={styles.switch_label}> Beni Hatırla </Text>
@@ -45,14 +66,9 @@ const Login = ({ navigation }) => {
                         onValueChange={toggleSwitch}
                         value={isEnabled} />
                 </View>
-
-                <Button
-                    onPress={() => navigation.navigate('Home')}
-                    text="Giriş Yap"
-                />
                 <Button
                     onPress={fetchUserData}
-                    text="Fetch Data"
+                    text="Giriş Yap"
                 />
             </View>
             <View style={styles.register_container}>

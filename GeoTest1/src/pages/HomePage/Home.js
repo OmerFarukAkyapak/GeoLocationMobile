@@ -1,11 +1,47 @@
-import React from 'react'
-import { View, Text, Button, ScrollView } from 'react-native'
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, PermissionsAndroid } from 'react-native';
 import { Formik } from 'formik';
-import styles from './Home.style'
-import SuppButton from '../../components/SuppButton'
-import SuppInput from '../../components/SuppInput'
+import styles from './Home.style';
+import SuppButton from '../../components/SuppButton';
+import SuppInput from '../../components/SuppInput';
+import Geolocation from 'react-native-geolocation-service';
 
 const Home = ({ navigation }) => {
+
+    //state hold location
+    const [location, setLocation] = useState({ latitude: '', longitude: '' });
+
+    //get location function
+    const getLocation = async () => {
+        try {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Konum İzni',
+                    message: 'Konumunuza erişmek için izin vermeniz gerekmektedir.',
+                    buttonPositive: 'Tamam',
+                    buttonNegative: 'İptal',
+                }
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                Geolocation.getCurrentPosition(
+                    position => {
+                        const { location } = position.coords;
+                        console.log('Konum alındı:', position.coords);
+                        setLocation({ location });
+                    },
+                    error => {
+                        console.log('Konum alınamadı:', error.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+                );
+            } else {
+                console.log('Konum izni reddedildi');
+            }
+        } catch (error) {
+            console.log('Konum izni alınamıyor:', error);
+        }
+    };
 
     return (
         <Formik
@@ -25,7 +61,9 @@ const Home = ({ navigation }) => {
             }}
             onSubmit={values => console.log(values)}
         >
-            {({ handleChange, handleSubmit, handleLocation, values }) => (
+            {({ handleChange, handleSubmit, setFieldValue, values }) => (
+
+
                 <View style={styles.conteiner}>
                     <ScrollView>
                         <Text style={styles.header_label}> Tedarikçi Veri Girişi </Text>
@@ -54,7 +92,7 @@ const Home = ({ navigation }) => {
                                 <SuppInput
                                     label='Enlem'
                                     placeHolder='Enlem Giriniz ...'
-                                    onChangeText={handleChange('latitude')}
+                                    onChangeText={text => setLatitude(text)}
                                     value={values.latitude}
                                 />
                                 <SuppInput
@@ -66,7 +104,7 @@ const Home = ({ navigation }) => {
 
                             </View>
                             <SuppButton
-                                onPress={handleLocation}
+                                onPress={getLocation}
                                 text="Konum Al"
                             />
                         </View>
